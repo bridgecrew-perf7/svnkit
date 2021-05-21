@@ -54,17 +54,9 @@ public class SvnkitController {
 	}
 	
 	@GetMapping("/deduplicationFilePath.do")
-	public ModelAndView deduplicationFilePath(@RequestParam("startRevision")Long startRevision,
+	public ResponseEntity<?> deduplicationFilePath(@RequestParam("startRevision")Long startRevision,
 													@RequestParam("endRevision")Long endRevision) throws SVNException {
-		ModelAndView modelAndView = new ModelAndView();
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		
-		resultMap.put("deduplicationFilePath", svnkitService.getDeduplicationFilePath(startRevision, endRevision));
-		
-		modelAndView.addObject("result", resultMap);
-		modelAndView.setViewName("jsonView");
-		
-		return modelAndView;
+		return ResponseEntity.ok().body(svnkitService.getDeduplicationFilePath(startRevision, endRevision));
 	}
 	
 	@GetMapping("/batDownload.do")
