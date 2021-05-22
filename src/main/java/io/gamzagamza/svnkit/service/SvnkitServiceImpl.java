@@ -2,7 +2,10 @@ package io.gamzagamza.svnkit.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -50,7 +53,7 @@ public class SvnkitServiceImpl implements SvnkitService {
 	
 	public void batDownload(Long startRevision, Long endRevision, List<String> projectList, List<String> pathList, HttpServletResponse response) throws SVNException {
 		List<String> deduplicationFilePathList = SvnUtils.getDeduplicationFilePathList(startRevision, endRevision);
-		List<String> targetFilePathList = SvnUtils.getTargetPathList(deduplicationFilePathList, projectList, pathList);
+		List<String> targetFilePathList = getTargetPathList(deduplicationFilePathList, projectList, pathList);
 		
 		StringBuilder sb = new StringBuilder();
 		
@@ -68,8 +71,45 @@ public class SvnkitServiceImpl implements SvnkitService {
 			response.getOutputStream().flush();
 			response.getOutputStream().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public static List<String> getTargetPathList(List<String> deduplicationFilePathList, List<String> projectList, List<String> pathList) {
+		final String MAIN_DIR = "/WEB-INF/classes";
+		final String JSP_DIR = "/WEB-INF/jsp";
+
+		List<String> targetFilePathList = new ArrayList<>();
+
+		for(String deduplicationFilePath : deduplicationFilePathList) {
+			String targetFilePath = "";
+			String type = deduplicationFilePath.split("\\.")[1];
+
+			if(type.equals("java")) {
+				targetFilePath = deduplicationFilePath.substring(deduplicationFilePath.indexOf("java") + "java".length());
+				targetFilePathList.add(ifPath(deduplicationFilePath, projectList, pathList) + MAIN_DIR + targetFilePath.replace(".java", ".class"));
+			} else if(type.equals("xml") || type.equals("properties")) {
+				targetFilePath = deduplicationFilePath.substring(deduplicationFilePath.indexOf("resources") + "resources".length());
+				targetFilePathList.add(ifPath(deduplicationFilePath, projectList, pathList) + MAIN_DIR + targetFilePath);
+			} else if(type.equals("jsp")) {
+				targetFilePath = deduplicationFilePath.substring(deduplicationFilePath.indexOf("jsp") + "jsp".length());
+				targetFilePathList.add(ifPath(deduplicationFilePath, projectList, pathList) + JSP_DIR + targetFilePath);
+			} else {
+				targetFilePath = deduplicationFilePath.substring(deduplicationFilePath.indexOf("webapp") + "webapp".length());
+				targetFilePathList.add(ifPath(deduplicationFilePath, projectList, pathList) + targetFilePath);
+			}
+		}
+
+		return targetFilePathList;
+	}
+
+	private static String ifPath(String path, List<String> projectList, List<String> pathList) {
+		Map<String, String> mapping = new HashMap<>();
+
+		for(int i = 0; i < projectList.size(); i++) {
+			mapping.put(projectList.get(i), pathList.get(i));
+		}
+
+		return mapping.get(path.split("/")[1]);
 	}
 }
