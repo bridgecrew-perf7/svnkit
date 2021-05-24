@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -44,13 +45,89 @@ public class SvnkitServiceImpl implements SvnkitService {
 		
 		return Long.toString(repository.getLatestRevision());
 	}
-	
-	public List<String> getDeduplicationFilePath(Long startRevision, Long endRevision) throws SVNException {
-		return SvnUtils.getDeduplicationFilePathList(startRevision, endRevision);
+
+	public List<SvnConnectionVO> getUserCookie() {
+		List<SvnConnectionVO> svnConnections = new ArrayList<>();
+
+		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes)RequestContextHolder.currentRequestAttributes();
+		Cookie[] cookies = servletRequestAttributes.getRequest().getCookies();
+
+		StringBuilder users = null;
+
+		if(cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals("svnUsers")) {
+					users = new StringBuilder();
+					users.append(cookie.getValue());
+				}
+			}
+		}
+
+		if(users != null) {
+			String[] userArr = users.toString().split("&");
+			for(String userInfo : userArr) {
+				SvnConnectionVO svnConnectionVO = new SvnConnectionVO();
+				svnConnectionVO.setSvnUrl(userInfo.split("#")[0]);
+				svnConnectionVO.setSvnUser(userInfo.split("#")[1]);
+				svnConnectionVO.setSvnPassword(userInfo.split("#")[2]);
+
+				svnConnections.add(svnConnectionVO);
+			}
+		}
+
+		return svnConnections;
+	}
+
+	public void userCookieAdd(SvnConnectionVO svnConnectionVO) {
+		ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes)RequestContextHolder.currentRequestAttributes();
+		Cookie[] cookies = servletRequestAttributes.getRequest().getCookies();
+
+		StringBuilder users = null;
+
+		if(cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals("svnUsers")) {
+					users = new StringBuilder();
+					users.append(cookie.getValue());
+				}
+			}
+		}
+
+		if(users != null) {
+			String[] usersArr = users.toString().split("&");
+			boolean exist = false;
+			for(String user : usersArr) {
+				String[] userInfo = user.split("#");
+				if(userInfo[1].equals(svnConnectionVO.getSvnUser())) {
+					exist = true;
+				}
+			}
+
+			if(!exist) {
+				users.append("&");
+				users.append(svnConnectionVO.getSvnUrl() + "#");
+				users.append(svnConnectionVO.getSvnUser() + "#");
+				users.append(svnConnectionVO.getSvnPassword());
+			}
+		} else {
+			users = new StringBuilder();
+
+			users.append(svnConnectionVO.getSvnUrl() + "#");
+			users.append(svnConnectionVO.getSvnUser() + "#");
+			users.append(svnConnectionVO.getSvnPassword());
+		}
+
+		Cookie usersCookie = new Cookie("svnUsers", users.toString());
+
+		servletRequestAttributes.getResponse().addCookie(usersCookie);
 	}
 	
-	public void batDownload(Long startRevision, Long endRevision, List<String> projectList, List<String> pathList, HttpServletResponse response) throws SVNException {
-		List<String> deduplicationFilePathList = SvnUtils.getDeduplicationFilePathList(startRevision, endRevision);
+	public List<String> getDeduplicationFilePath(Long startRevision, Long endRevision, String regex) throws SVNException {
+		return SvnUtils.getDeduplicationFilePathList(startRevision, endRevision, regex);
+	}
+	
+	public void batDownload(Long startRevision, Long endRevision, String regex, List<String> projectList, List<String> pathList, HttpServletResponse response) throws SVNException {
+		List<String> deduplicationFilePathList = SvnUtils.getDeduplicationFilePathList(startRevision, endRevision, regex);
 		List<String> targetFilePathList = getTargetPathList(deduplicationFilePathList, projectList, pathList);
 
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");

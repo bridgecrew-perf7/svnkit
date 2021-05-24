@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 
 import io.gamzagamza.svnkit.vo.SvnConnectionVO;
 import io.gamzagamza.svnkit.vo.SvnLogVO;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.tmatesoft.svn.core.SVNAuthenticationException;
@@ -93,7 +94,9 @@ public class SvnUtils {
         return logs;
 	}
 	
-	public static List<String> getDeduplicationFilePathList(Long startRevision, Long endRevision) throws SVNException {
+	public static List<String> getDeduplicationFilePathList(Long startRevision, Long endRevision, String regex) throws SVNException {
+		AntPathMatcher pathMatcher = new AntPathMatcher();
+
 		SVNRepository repository = getRepository();
 		
 		Set<String> deduplicationFileList = new HashSet<>();
@@ -106,7 +109,9 @@ public class SvnUtils {
             Map<String, SVNLogEntryPath> changedPaths = logEntry.getChangedPaths();
             for (String key : changedPaths.keySet()) {
                 SVNLogEntryPath svnLogEntryPath = changedPaths.get(key);
-                deduplicationFileList.add(svnLogEntryPath.getPath());
+                if(pathMatcher.match(regex, svnLogEntryPath.getPath())) {
+					deduplicationFileList.add(svnLogEntryPath.getPath());
+				}
             }
         }
 

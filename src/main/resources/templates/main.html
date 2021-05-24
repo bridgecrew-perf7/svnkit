@@ -8,32 +8,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         .svnkit-container {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
         .connection-container {
-        width: 1120px;
+            width: 1120px;
         }
 
         .connection-btn-group {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
         }
 
         .connection-btn-group button:not(:first-child) {
-        margin-left: 10px;
+            margin-left: 10px;
+        }
+
+        .list-group-item:hover {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -61,8 +66,18 @@
                 </tbody>
             </table>
             <div class="connection-btn-group">
+                <button type="button" class="btn btn-primary" onclick="fncCookieAddByUser()">Add User</button>
                 <button type="button" class="btn btn-primary" onclick="fncConnectionTest()">Test</button>
                 <button type="button" class="btn btn-primary" onclick="fncConnection()">Connection</button>
+            </div>
+        </div>
+        <div>
+            <div class="list-group">
+                <div th:each="user : ${users}" class="list-group-item list-group-item-action list-group-item-light"
+                    th:onclick="fncConnectionSetting([[${user.svnUrl}]], [[${user.svnUser}]], [[${user.svnPassword}]])">
+                    <div>SVN URL : <th:block th:text="${user.svnUrl}"></th:block></div>
+                    <div>SVN USER : <th:block th:text="${user.svnUser}"></th:block></div>
+                </div>
             </div>
         </div>
     </div>
@@ -107,6 +122,33 @@
 					}
 				}
 			});
+		}
+
+		function fncCookieAddByUser() {
+		    let data = {
+					'svnUrl': $('#svnUrl').val(),
+					'svnUser': $('#svnUser').val(),
+					'svnPassword': $('#svnPassword').val()
+			};
+
+			$.ajax({
+				url: '/svnkit/userCookieAdd.do',
+				type: 'POST',
+				data: data,
+				success: function(response) {
+					if(response == 'success') {
+						location.reload();
+					} else {
+						alert('연결에 실패했습니다.');
+					}
+				}
+			});
+		}
+
+		function fncConnectionSetting(url, user, password) {
+            $('#svnUrl').val(url);
+			$('#svnUser').val(user);
+			$('#svnPassword').val(password);
 		}
 	</script>
 </body>

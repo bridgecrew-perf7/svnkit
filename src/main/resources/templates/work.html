@@ -59,6 +59,8 @@
                     <input type="text" class="form-control" id="startRevision">
                     <label for="endRevision" class="form-label mt-2">End Revision</label>
                     <input type="text" class="form-control" id="endRevision">
+                    <label for="regex" class="form-label mt-2">Regex</label>
+                    <input type="text" class="form-control" id="regex">
                     <div class="btn-group mt-3">
                         <button type="button" class="btn btn-primary" onclick="fncDeduplicationFilePath()">SEARCH</button>
                     </div>
@@ -95,7 +97,8 @@
 
 			let data = {
 					'startRevision': $('#startRevision').val(),
-					'endRevision': $('#endRevision').val()
+					'endRevision': $('#endRevision').val(),
+					'regex': $('#regex').val()
 			};
 
 			$.ajax({
@@ -138,6 +141,7 @@
 
 			downloadForm.append($('<input/>', {type: 'hidden', name: 'startRevision', value:$('#startRevision').val() }));
 			downloadForm.append($('<input/>', {type: 'hidden', name: 'endRevision', value:$('#endRevision').val() }));
+			downloadForm.append($('<input/>', {type: 'hidden', name: 'regex', value:$('#regex').val() }));
 
 			$('input[name="project"]').each(function() {
 				downloadForm.append($('<input/>', {type: 'hidden', name: 'project', value:$(this).val() }));

@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +33,8 @@ public class SvnkitController {
 	private SvnkitService svnkitService;
 	
 	@GetMapping("/main.do")
-	public String main() {
+	public String main(Model model) {
+		model.addAttribute("users", svnkitService.getUserCookie());
 		return "main";
 	}
 	
@@ -51,19 +54,27 @@ public class SvnkitController {
 		
 		return "work";
 	}
+
+	@PostMapping("/userCookieAdd.do")
+	public ResponseEntity<?> userCookieAdd(SvnConnectionVO svnConnectionVO) {
+		svnkitService.userCookieAdd(svnConnectionVO);
+		return ResponseEntity.ok().body("success");
+	}
 	
 	@GetMapping("/deduplicationFilePath.do")
 	public ResponseEntity<?> deduplicationFilePath(@RequestParam("startRevision")Long startRevision,
-													@RequestParam("endRevision")Long endRevision) throws SVNException {
-		return ResponseEntity.ok().body(svnkitService.getDeduplicationFilePath(startRevision, endRevision));
+													@RequestParam("endRevision")Long endRevision,
+												    @RequestParam("regex")String regex) throws SVNException {
+		return ResponseEntity.ok().body(svnkitService.getDeduplicationFilePath(startRevision, endRevision, regex));
 	}
 	
 	@GetMapping("/batDownload.do")
 	public void batDownload(@RequestParam("startRevision")Long startRevision,
 								@RequestParam("endRevision")Long endRevision,
+								@RequestParam("regex")String regex,
 								@RequestParam("project")List<String> projectList,
 								@RequestParam("path")List<String> pathList,
 								HttpServletResponse response) throws SVNException {
-		svnkitService.batDownload(startRevision, endRevision, projectList, pathList, response);
+		svnkitService.batDownload(startRevision, endRevision, regex, projectList, pathList, response);
 	}
 }
