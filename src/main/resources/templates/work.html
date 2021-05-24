@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .svnkit-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .log-container {
+        width: 1120px;
+    }
+
+    .log-lastRevision {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .log-deduplication {
+        border: 1px solid rgb(238, 238, 238);
+        border-radius: 12px;
+        padding: 20px 20px;
+    }
+
+    .log-deduplication-title {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .btn-group {
+        display: flex;
+    }
+    </style>
+</head>
+<body>
+    <div class="svnkit-container">
+        <div class="log-container">
+            <div class="log-lastRevision">LAST REVISION : <th:block th:text="${lastRevision}"/></div>
+            <div class="log-deduplication mt-5">
+                <div class="log-deduplication-title">Get Deduplication File Path</div>
+                <div class="mt-3">
+                    <label for="startRevision" class="form-label">Start Revision</label>
+                    <input type="text" class="form-control" id="startRevision">
+                    <label for="endRevision" class="form-label mt-2">End Revision</label>
+                    <input type="text" class="form-control" id="endRevision">
+                    <div class="btn-group mt-3">
+                        <button type="button" class="btn btn-primary" onclick="fncDeduplicationFilePath()">SEARCH</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div id="log-list"></div>
+                    <div id="mapping-list"></div>
+                    <div class="btn-group mt-3">
+                      <button type="button" class="btn btn-primary" onclick="fncBatDownload()">BAT DOWNLOAD</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+		var logModal = new bootstrap.Modal(document.getElementById('logModal'), {
+			  keyboard: false
+		});
+
+		function fncDeduplicationFilePath() {
+			if($('#startRevision').val() == '') {
+				alert('Start Revision is Null');
+				return false;
+			} else if($('#endRevision').val() == '') {
+				alert('End Revision is Null');
+				return false;
+			}
+
+			let data = {
+					'startRevision': $('#startRevision').val(),
+					'endRevision': $('#endRevision').val()
+			};
+
+			$.ajax({
+				url: '/svnkit/deduplicationFilePath.do',
+				type: 'GET',
+				data: data,
+				success: function(response) {
+					let project = [];
+					let uniqueProject = [];
+
+					$('#log-list').html('');
+					$('#mapping-list').html('');
+					response.forEach(filePath => {
+						$('#log-list').append('<div>'+filePath+'</div>');
+						project.push(filePath.split('/')[1]);
+					});
+					uniqueProject = project.filter((item, index) => project.indexOf(item) === index);
+
+					uniqueProject.forEach(project => {
+						$('#mapping-list').append('<div class="mt-3" style="width: 100%; display: flex; justify-content: space-between;">'
+		    					+ '<div class="col-3"><input type="text" class="form-control" name="project" placeholder="project" value="'+project+'" disabled></div>'
+		    					+ '<div class="col-8"><input type="text" class="form-control" name="path" placeholder="path"></div>'
+		    					+ '</div>');
+					});
+
+					logModal.show();
+				}
+			});
+		}
+
+		function fncBatDownload() {
+			$('#downloadForm').remove();
+
+			let downloadForm = $('<form></form>');
+			downloadForm.attr('id', 'downloadForm');
+			downloadForm.attr('name', 'downloadForm');
+			downloadForm.attr('method', "get");
+			downloadForm.attr('action', '/svnkit/batDownload.do');
+			downloadForm.attr('target', '_blank');
+
+			downloadForm.append($('<input/>', {type: 'hidden', name: 'startRevision', value:$('#startRevision').val() }));
+			downloadForm.append($('<input/>', {type: 'hidden', name: 'endRevision', value:$('#endRevision').val() }));
+
+			$('input[name="project"]').each(function() {
+				downloadForm.append($('<input/>', {type: 'hidden', name: 'project', value:$(this).val() }));
+			});
+			$('input[name="path"]').each(function() {
+				downloadForm.append($('<input/>', {type: 'hidden', name: 'path', value:$(this).val() }));
+			});
+
+			downloadForm.appendTo('body');
+			downloadForm.submit();
+		}
+	</script>
+</body>
+</html>

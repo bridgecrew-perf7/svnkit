@@ -26,14 +26,13 @@ import org.tmatesoft.svn.core.SVNException;
 @Controller
 public class SvnkitController {
 	private final Logger LOGGER = LoggerFactory.getLogger(SvnkitController.class);
-	private final String JSP_DIR = "vComponent/svnkit/";
 	
 	@Autowired
 	private SvnkitService svnkitService;
 	
 	@GetMapping("/main.do")
 	public String main() {
-		return JSP_DIR + "main";
+		return "main";
 	}
 	
 	@PostMapping("/test.do")
@@ -50,7 +49,7 @@ public class SvnkitController {
 	public String work(ModelMap model) throws SVNException {
 		model.addAttribute("lastRevision", svnkitService.svnLastRevision());
 		
-		return JSP_DIR + "work";
+		return "work";
 	}
 	
 	@GetMapping("/deduplicationFilePath.do")

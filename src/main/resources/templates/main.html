@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        }
+
+        .svnkit-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        }
+
+        .connection-container {
+        width: 1120px;
+        }
+
+        .connection-btn-group {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        }
+
+        .connection-btn-group button:not(:first-child) {
+        margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="svnkit-container">
+        <div class="connection-container">
+            <table class="table table-bordered">
+                <colgroup>
+                    <col width="20%">
+                    <col width="80%">
+                </colgroup>
+                <tbody>
+                <tr>
+                    <td>SVN URL</td>
+                    <td><input type="text" class="form-control" id="svnUrl" placeholder="svn://127.0.0.1/project"></td>
+                </tr>
+                <tr>
+                    <td>SVN USER</td>
+                    <td><input type="text" class="form-control" id="svnUser" placeholder="user"></td>
+                </tr>
+                <tr>
+                    <td>SVN PASSWORD</td>
+                    <td><input type="password" class="form-control" id="svnPassword" placeholder="password"></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="connection-btn-group">
+                <button type="button" class="btn btn-primary" onclick="fncConnectionTest()">Test</button>
+                <button type="button" class="btn btn-primary" onclick="fncConnection()">Connection</button>
+            </div>
+        </div>
+    </div>
+    <script>
+		function fncConnectionTest() {
+			let data = {
+					'svnUrl': $('#svnUrl').val(),
+					'svnUser': $('#svnUser').val(),
+					'svnPassword': $('#svnPassword').val()
+			};
+
+			$.ajax({
+				url: '/svnkit/test.do',
+				type: 'POST',
+				data: data,
+				success: function(response) {
+					if(response == 'success') {
+						alert('연결에 성공했습니다.');
+					} else {
+						alert('연결에 실패했습니다.');
+					}
+				}
+			});
+		}
+
+		function fncConnection() {
+			let data = {
+					'svnUrl': $('#svnUrl').val(),
+					'svnUser': $('#svnUser').val(),
+					'svnPassword': $('#svnPassword').val()
+			};
+
+			$.ajax({
+				url: '/svnkit/connect.do',
+				type: 'POST',
+				data: data,
+				success: function(response) {
+					if(response == 'success') {
+						location.href = '/svnkit/work.do';
+					} else {
+						alert('연결에 실패했습니다.');
+					}
+				}
+			});
+		}
+	</script>
+</body>
+</html>

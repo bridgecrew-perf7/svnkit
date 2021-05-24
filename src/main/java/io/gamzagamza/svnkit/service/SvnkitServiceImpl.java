@@ -2,10 +2,8 @@ package io.gamzagamza.svnkit.service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -54,11 +52,25 @@ public class SvnkitServiceImpl implements SvnkitService {
 	public void batDownload(Long startRevision, Long endRevision, List<String> projectList, List<String> pathList, HttpServletResponse response) throws SVNException {
 		List<String> deduplicationFilePathList = SvnUtils.getDeduplicationFilePathList(startRevision, endRevision);
 		List<String> targetFilePathList = getTargetPathList(deduplicationFilePathList, projectList, pathList);
-		
+
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date now = new Date();
+		String nowStr = simpleDateFormat.format(now);
 		StringBuilder sb = new StringBuilder();
-		
+
 		targetFilePathList.forEach(filePath -> {
-			sb.append("copy " + filePath.replace("/", "\\") + " D:\\download\\");
+			String replacePath = filePath.substring(0, filePath.lastIndexOf("/"));
+			String lastReplacePath = replacePath.substring(replacePath.indexOf("WEB-INF")).replace("/", "\\");
+
+			sb.append("mkdir D:\\targetcopy\\" + nowStr + "\\" + lastReplacePath);
+			sb.append("\n");
+		});
+
+		targetFilePathList.forEach(filePath -> {
+			String replacePath = filePath.substring(0, filePath.lastIndexOf("/"));
+			String lastReplacePath = replacePath.substring(replacePath.indexOf("WEB-INF")).replace("/", "\\");
+
+			sb.append("copy " + filePath.replace("/", "\\") + " D:\\targetcopy\\" + nowStr + "\\" + lastReplacePath);
 			sb.append("\n");
 		});
 		
